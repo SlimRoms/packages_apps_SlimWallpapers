@@ -1,1 +1,0 @@
-Slim Wallpaper Chooser

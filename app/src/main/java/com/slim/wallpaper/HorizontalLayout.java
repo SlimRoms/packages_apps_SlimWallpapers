@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -12,7 +13,7 @@ import android.widget.LinearLayout;
 public class HorizontalLayout extends LinearLayout {
 
     Context mContext;
-    OnClickListener mOnClickListener;
+    OnImageClickListener mOnImageClickListener;
 
     int mCurrent = 0;
 
@@ -45,12 +46,16 @@ public class HorizontalLayout extends LinearLayout {
         return mCurrent;
     }
 
+    void setDefault(int i) {
+       setCurrent(i);
+    }
+
     void setCurrent(int i) {
         mCurrent = i;
     }
 
-    public void setOnClickListener(OnClickListener onClickListener) {
-        mOnClickListener = onClickListener;
+    public void setOnImageClickListener(OnImageClickListener onImageClickListener) {
+        mOnImageClickListener = onImageClickListener;
     }
 
     ImageButton getImageButton(Drawable d, int i) {
@@ -58,12 +63,22 @@ public class HorizontalLayout extends LinearLayout {
         ImageButton imageButton = new ImageButton(mContext);
         imageButton.setLayoutParams(new ViewGroup.LayoutParams(220, 220));
         imageButton.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        Log.d("HorizontalLayout", Integer.toString(i));
         imageButton.setId(i);
         imageButton.setImageDrawable(d);
 
-        imageButton.setOnClickListener(mOnClickListener);
+        imageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int i = v.getId();
+                setCurrent(i);
+                mOnImageClickListener.onImageClick(v);
+            }
+        });
 
         return imageButton;
+    }
+
+    public interface OnImageClickListener {
+        public void onImageClick(View v);
     }
 }

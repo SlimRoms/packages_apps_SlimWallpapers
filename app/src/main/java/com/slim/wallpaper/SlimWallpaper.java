@@ -23,6 +23,7 @@ import java.util.ArrayList;
 
 import android.app.Activity;
 import android.app.WallpaperManager;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -40,7 +41,11 @@ import android.widget.Toast;
 
 public class SlimWallpaper extends Activity {
 
-    private HorizontalLayout mGallery;
+    private static final String SETTINGS = "com.slim.wallpaper_prefs";
+    private static final String LAST_WALLPAPER = "last_wallpaper";
+
+
+    private HorizontalLayout mLayout;
     private ImageView mImageView;
     private boolean mIsWallpaperSet;
 
@@ -58,26 +63,25 @@ public class SlimWallpaper extends Activity {
 
         setContentView(R.layout.wallpaper_chooser);
 
-        mGallery = (HorizontalLayout) findViewById(R.id.gallery);
-        setClicked(0);
-        mGallery.setOnClickListener(new View.OnClickListener() {
-
+        int last = getLastWallpaper();
+        mLayout = (HorizontalLayout) findViewById(R.id.gallery);
+        mLayout.setDefault(last);
+        imageClicked(last);
+        mLayout.setOnImageClickListener(new HorizontalLayout.OnImageClickListener() {
             @Override
-            public void onClick(View v) {
-                int i = v.getId();
-                setClicked(i);
+            public void onImageClick(View v) {
+                imageClicked(v.getId());
             }
         });
         for (int i = 0; i < mThumbs.size(); i++) {
-            mGallery.add(mThumbs.get(i), i);
+            mLayout.add(mThumbs.get(i), i);
         }
         mImageView = (ImageView) findViewById(R.id.wallpaper);
         new ImageResizer().execute(R.array.wallpapers);
         new ImageResizer().execute(R.array.extra_wallpapers);
     }
 
-    private void setClicked(int i) {
-        mGallery.setCurrent(i);
+    private void imageClicked(int i) {
         if (mLoader != null && mLoader.getStatus() != WallpaperLoader.Status.FINISHED) {
             mLoader.cancel();
         }
@@ -95,12 +99,13 @@ public class SlimWallpaper extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.apply:
-                selectWallpaper(mGallery.getCurrent());
+                selectWallpaper(mLayout.getCurrent());
+                setLastWallpaper(mLayout.getCurrent());
                 break;
 
             case R.id.save:
                 try {
-                    saveWallpaper(mGallery.getCurrent());
+                    saveWallpaper(mLayout.getCurrent());
                 } catch (IOException e) {
                     e.printStackTrace();
                     makeToast("Failed to make folder");
@@ -121,7 +126,7 @@ public class SlimWallpaper extends Activity {
         File folder = new File(Environment.getExternalStorageDirectory() + "/Slim/wallpapers");
         String file = folder + "/" + getResources().getStringArray(R.array.wallpapers)[position]
                 + ".png";
-        String toastText = null;
+        String toastText;
         if (!folder.exists()) {
             if (!folder.mkdirs()) {
                 throw new IOException("Failed to make folder " + folder);
@@ -159,7 +164,6 @@ public class SlimWallpaper extends Activity {
             size[0] = 1340;
             size[1] = 1196;
         }
-        Log.d("SlimWallpaper", size[0] + "x" + size[1]);
         return size;
     }
 
@@ -249,7 +253,7 @@ public class SlimWallpaper extends Activity {
 
         @Override
         protected void onProgressUpdate(Integer... i) {
-            mGallery.add(array.get(i[0]), i[0]);
+            mLayout.add(array.get(i[0]), i[0]);
         }
     }
 
@@ -267,8 +271,7 @@ public class SlimWallpaper extends Activity {
             if (isCancelled()) return null;
             Bitmap b = BitmapFactory.decodeResource(getResources(), mImages.get(params[0]));
             int[] size = getWallpaperSize();
-            Bitmap bi = ImageHelper.resize(getApplicationContext(), b, size[0], size[1]);
-            return bi;
+            return ImageHelper.resize(getApplicationContext(), b, size[0], size[1]);
         }
 
         @Override
@@ -282,7 +285,7 @@ public class SlimWallpaper extends Activity {
                 }
 
                 setTitle(getResources().getStringArray(
-                        R.array.wallpapers)[mGallery.getCurrent()].toUpperCase());
+                        R.array.wallpapers)[mLayout.getCurrent()].toUpperCase());
 
                 final ImageView view = mImageView;
                 view.setImageBitmap(b);
@@ -301,5 +304,16 @@ public class SlimWallpaper extends Activity {
             mOptions.requestCancelDecode();
             super.cancel(true);
         }
+    }
+
+    private int getLastWallpaper() {
+        SharedPreferences pref = getSharedPreferences(SETTINGS, 0);
+        return pref.getInt(LAST_WALLPAPER, 0);
+    }
+
+    private void setLastWallpaper(int i) {
+        SharedPreferences.Editor editor = getSharedPreferences(SETTINGS, 0).edit();
+        editor.putInt(LAST_WALLPAPER, i);
+        editor.commit();
     }
 }
