@@ -1,0 +1,9 @@
+SlimWallpaper.iml
+project.properties
+.classpath
+.project
+.idea/*
+.idea/.name
+bin/*
+gen/*
+out/*

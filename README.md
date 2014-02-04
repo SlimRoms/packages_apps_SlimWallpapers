@@ -1,0 +1,1 @@
+SlimWallpaper chooser
