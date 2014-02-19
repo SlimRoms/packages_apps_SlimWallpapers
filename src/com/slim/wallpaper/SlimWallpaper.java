@@ -14,34 +14,30 @@
  * limitations under the License.
  */
 
-package com.slim.wallpapers;
+package com.slim.wallpaper;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.BitmapFactory;
 import android.graphics.Bitmap;
+import android.graphics.Path;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.AsyncTask;
+import android.os.Environment;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.Window;
-import android.view.View.OnClickListener;
-import android.widget.AdapterView;
-import android.widget.BaseAdapter;
-import android.widget.Gallery;
-import android.widget.ImageView;
-import android.widget.TextView;
+import android.view.*;
+import android.widget.*;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
 
-public class SlimWallpapers extends Activity implements AdapterView.OnItemSelectedListener,
-        OnClickListener {
+public class SlimWallpaper extends Activity implements AdapterView.OnItemSelectedListener {
 
     private Gallery mGallery;
     private ImageView mImageView;
@@ -50,53 +46,92 @@ public class SlimWallpapers extends Activity implements AdapterView.OnItemSelect
 
     private Bitmap mBitmap;
 
-    private ArrayList<Integer> mThumbs;
+    private ArrayList<Drawable> mThumbs;
     private ArrayList<Integer> mImages;
     private WallpaperLoader mLoader;
+    private ImageAdapter mAdapter;
 
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
 
         findWallpapers();
 
         setContentView(R.layout.wallpaper_chooser);
 
+        mAdapter = new ImageAdapter(SlimWallpaper.this);
+
         mGallery = (Gallery) findViewById(R.id.gallery);
-        mGallery.setAdapter(new ImageAdapter(this));
+        mGallery.setAdapter(mAdapter);
         mGallery.setOnItemSelectedListener(this);
         mGallery.setCallbackDuringFling(false);
 
-        findViewById(R.id.set).setOnClickListener(this);
-
         mImageView = (ImageView) findViewById(R.id.wallpaper);
         mInfoView = (TextView) findViewById(R.id.info);
+
+        new ImageResizer().execute(R.array.wallpapers);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.apply, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.apply:
+                selectWallpaper(mGallery.getSelectedItemPosition());
+                break;
+
+            case R.id.save:
+                saveWallpaper(mGallery.getSelectedItemPosition());
+                break;
+        }
+        return true;
+    }
+
+    private void saveWallpaper(int position) {
+        Bitmap b = BitmapFactory.decodeResource(getResources(), mImages.get(position));
+        File folder = new File(Environment.getExternalStorageDirectory() + "/Slim/wallpapers");
+        if (!folder.exists()) {
+            folder.mkdirs();
+        }
+        String file = folder + "/" + getResources().getStringArray(R.array.wallpapers)[position] + ".png";
+        try {
+            FileOutputStream out = new FileOutputStream(file);
+            b.compress(Bitmap.CompressFormat.PNG, 90, out);
+            out.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (new File(file).exists()) {
+            Toast.makeText(getApplicationContext(), "Wallpaper saved to " + file, Toast.LENGTH_SHORT).show();
+        }
+
     }
 
     private void findWallpapers() {
-        mThumbs = new ArrayList<Integer>(24);
+        mThumbs = new ArrayList<Drawable>(24);
         mImages = new ArrayList<Integer>(24);
 
         final Resources resources = getResources();
         final String packageName = getApplication().getPackageName();
 
         addWallpapers(resources, packageName, R.array.wallpapers);
-        addWallpapers(resources, packageName, R.array.extra_wallpapers);
     }
 
     private void addWallpapers(Resources resources, String packageName, int list) {
         final String[] extras = resources.getStringArray(list);
         for (String extra : extras) {
             int res = resources.getIdentifier(extra, "drawable", packageName);
+            Drawable d = ImageHelper.resize(getApplicationContext(),
+                    getResources().getDrawable(R.drawable.app_icon), 100);
             if (res != 0) {
-                final int thumbRes = resources.getIdentifier(extra + "_small",
-                        "drawable", packageName);
-
-                if (thumbRes != 0) {
-                    mThumbs.add(thumbRes);
-                    mImages.add(res);
-                }
+                mImages.add(res);
+                mThumbs.add(d);
             }
         }
     }
@@ -110,7 +145,7 @@ public class SlimWallpapers extends Activity implements AdapterView.OnItemSelect
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        
+
         if (mLoader != null && mLoader.getStatus() != WallpaperLoader.Status.FINISHED) {
             mLoader.cancel(true);
             mLoader = null;
@@ -151,7 +186,7 @@ public class SlimWallpapers extends Activity implements AdapterView.OnItemSelect
     private class ImageAdapter extends BaseAdapter {
         private LayoutInflater mLayoutInflater;
 
-        ImageAdapter(SlimWallpapers context) {
+        ImageAdapter(SlimWallpaper context) {
             mLayoutInflater = context.getLayoutInflater();
         }
 
@@ -175,23 +210,45 @@ public class SlimWallpapers extends Activity implements AdapterView.OnItemSelect
             } else {
                 image = (ImageView) convertView;
             }
-            
-            int thumbRes = mThumbs.get(position);
-            image.setImageResource(thumbRes);
-            Drawable thumbDrawable = image.getDrawable();
+
+            Drawable thumbDrawable = mThumbs.get(position);
             if (thumbDrawable != null) {
                 thumbDrawable.setDither(true);
-            } else {
-                Log.e("Paperless System", String.format(
-                    "Error decoding thumbnail resId=%d for wallpaper #%d",
-                    thumbRes, position));
             }
+            image.setImageDrawable(thumbDrawable);
             return image;
         }
     }
 
-    public void onClick(View v) {
-        selectWallpaper(mGallery.getSelectedItemPosition());
+    class ImageResizer extends AsyncTask<Integer, Void, ArrayList<Drawable>> {
+        ImageResizer() {
+
+        }
+
+        protected ArrayList<Drawable> doInBackground(Integer... i) {
+            if (isCancelled()) return null;
+            final String[] extras = getResources().getStringArray(i[0]);
+            final ArrayList<Drawable> returnValue = new ArrayList<Drawable>();
+            for (String extra : extras) {
+                int res = getResources().getIdentifier(extra, "drawable", getApplication().getPackageName());
+                if (res != 0) {
+                    returnValue.add(ImageHelper.resize(getApplicationContext(), getResources().getDrawable(res), 100));
+                }
+            }
+            return returnValue;
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<Drawable> arrayList) {
+            for (int i = 0; i < mThumbs.size(); i++) {
+                mThumbs.set(i, arrayList.get(i));
+                mAdapter.notifyDataSetChanged();
+            }
+        }
+
+        void cancel() {
+
+        }
     }
 
     class WallpaperLoader extends AsyncTask<Integer, Void, Bitmap> {
@@ -200,9 +257,9 @@ public class SlimWallpapers extends Activity implements AdapterView.OnItemSelect
         WallpaperLoader() {
             mOptions = new BitmapFactory.Options();
             mOptions.inDither = false;
-            mOptions.inPreferredConfig = Bitmap.Config.ARGB_8888;            
+            mOptions.inPreferredConfig = Bitmap.Config.ARGB_8888;
         }
-        
+
         protected Bitmap doInBackground(Integer... params) {
             if (isCancelled()) return null;
             try {
@@ -210,7 +267,7 @@ public class SlimWallpapers extends Activity implements AdapterView.OnItemSelect
                         mImages.get(params[0]), mOptions);
             } catch (OutOfMemoryError e) {
                 return null;
-            }            
+            }
         }
 
         @Override
@@ -223,7 +280,8 @@ public class SlimWallpapers extends Activity implements AdapterView.OnItemSelect
                     mBitmap.recycle();
                 }
 
-                mInfoView.setText(getResources().getStringArray(R.array.info)[mGallery.getSelectedItemPosition()]);
+                mInfoView.setText(getResources().getStringArray(
+                        R.array.wallpapers)[mGallery.getSelectedItemPosition()]);
 
                 final ImageView view = mImageView;
                 view.setImageBitmap(b);
@@ -238,7 +296,7 @@ public class SlimWallpapers extends Activity implements AdapterView.OnItemSelect
 
                 mLoader = null;
             } else {
-               b.recycle(); 
+                b.recycle();
             }
         }
 

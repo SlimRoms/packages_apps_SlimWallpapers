@@ -2,7 +2,7 @@
 <resources>
 
     <string name="app_name">SlimWallpapers</string>
-    <string name="set_wallpaper">Set wallpaper</string>
-    <string name="wallpaper_1">slimCat</string>
+    <string name="apply">Apply</string>
+    <string name="save">Save</string>
 
 </resources>

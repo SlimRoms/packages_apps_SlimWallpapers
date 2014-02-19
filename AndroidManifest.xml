@@ -1,24 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="com.slim.wallpapers">
+    package="com.slim.wallpaper"
+    android:versionCode="101"
+    android:versionName="1.01" >
 
-    <uses-sdk android:minSdkVersion="3" />
+    <uses-sdk
+        android:minSdkVersion="14"
+        android:targetSdkVersion="19" />
 
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
-    <application android:label="@string/app_name" android:icon="@drawable/wallpaperchooser">
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/app_icon"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
         <activity
-            android:name="SlimWallpapers"
-            android:label="@string/app_name"
-            android:icon="@drawable/wallpaperchooser"
-            android:screenOrientation="nosensor"
-            android:finishOnCloseSystemDialogs="true">
+            android:name="SlimWallpaper"
+            android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.SET_WALLPAPER" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-
     </application>
-
 </manifest>
