@@ -1,1 +1,1 @@
-Performance Settings
+Slim Wallpaper Chooser
