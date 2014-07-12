@@ -16,7 +16,13 @@
 
 package com.slim.wallpaper;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+
 import android.app.Activity;
+import android.app.WallpaperManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -32,21 +38,11 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-
-
 public class SlimWallpaper extends Activity {
 
-    private static final String TAG = "SlimWallpaper";
     private HorizontalLayout mGallery;
     private ImageView mImageView;
     private boolean mIsWallpaperSet;
-
-    private int mMax;
 
     private Bitmap mBitmap;
 
@@ -65,6 +61,7 @@ public class SlimWallpaper extends Activity {
         mGallery = (HorizontalLayout) findViewById(R.id.gallery);
         setClicked(0);
         mGallery.setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View v) {
                 int i = v.getId();
@@ -119,8 +116,11 @@ public class SlimWallpaper extends Activity {
 
     private void saveWallpaper(int position) throws IOException {
         Bitmap b = BitmapFactory.decodeResource(getResources(), mImages.get(position));
+        int[] size = getWallpaperSize();
+        Bitmap bi = ImageHelper.resize(getApplicationContext(), b, size[0], size[1]);
         File folder = new File(Environment.getExternalStorageDirectory() + "/Slim/wallpapers");
-        String file = folder + "/" + getResources().getStringArray(R.array.wallpapers)[position] + ".png";
+        String file = folder + "/" + getResources().getStringArray(R.array.wallpapers)[position]
+                + ".png";
         String toastText = null;
         if (!folder.exists()) {
             if (!folder.mkdirs()) {
@@ -129,7 +129,7 @@ public class SlimWallpaper extends Activity {
         }
         try {
             FileOutputStream out = new FileOutputStream(file);
-            b.compress(Bitmap.CompressFormat.PNG, 90, out);
+            bi.compress(Bitmap.CompressFormat.PNG, 90, out);
             out.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -141,6 +141,26 @@ public class SlimWallpaper extends Activity {
         }
         makeToast(toastText);
 
+    }
+
+    private int[] getWallpaperSize() {
+        int[] size = new int[2];
+        Resources res = getResources();
+        if (res.getBoolean(R.bool.is_nodpi)) {
+            size[0] = 960;
+            size[1] = 800;
+        } else if (res.getBoolean(R.bool.is_sw600dp_nodpi)) {
+            size[0] = 1600;
+            size[1] = 1280;
+        } else if (res.getBoolean(R.bool.is_sw720dp_nodpi)) {
+            size[0] = 1920;
+            size[1] = 1280;
+        } else if (res.getBoolean(R.bool.is_xhdpi)) {
+            size[0] = 1340;
+            size[1] = 1196;
+        }
+        Log.d("SlimWallpaper", size[0] + "x" + size[1]);
+        return size;
     }
 
     private void findWallpapers() {
@@ -195,8 +215,11 @@ public class SlimWallpaper extends Activity {
 
         mIsWallpaperSet = true;
         try {
-            InputStream stream = getResources().openRawResource(mImages.get(position));
-            setWallpaper(stream);
+            Bitmap b = BitmapFactory.decodeResource(getResources(), mImages.get(position));
+            int[] size = getWallpaperSize();
+            Bitmap bi = ImageHelper.resize(getApplicationContext(), b, size[0], size[1]);
+            WallpaperManager wm = WallpaperManager.getInstance(getApplicationContext());
+            wm.setBitmap(bi);
             setResult(RESULT_OK);
             finish();
         } catch (IOException e) {
@@ -204,38 +227,34 @@ public class SlimWallpaper extends Activity {
         }
     }
 
-    class ImageResizer extends AsyncTask<Integer, Void, ArrayList<Drawable>> {
-        ImageResizer() {
+    class ImageResizer extends AsyncTask<Integer, Integer, ArrayList<Drawable>> {
 
-        }
+        private ArrayList<Drawable> array;
 
         protected ArrayList<Drawable> doInBackground(Integer... i) {
             if (isCancelled()) return null;
             final String[] extras = getResources().getStringArray(i[0]);
-            ArrayList<Drawable> array = new ArrayList<Drawable>();
+            array = new ArrayList<Drawable>();
             for (int in = 0; in < extras.length; in++) {
-                int res = getResources().getIdentifier(extras[in], "drawable", getApplication().getPackageName());
+                int res = getResources().getIdentifier(extras[in], "drawable",
+                        getApplication().getPackageName());
                 if (res != 0) {
-                    array.add(ImageHelper.resize(getApplicationContext(), getResources().getDrawable(res), 75));
+                    array.add(ImageHelper.resize(getApplicationContext(), getResources()
+                            .getDrawable(res), 75));
                 }
+                publishProgress(in);
             }
             return array;
         }
 
         @Override
-        protected void onPostExecute(ArrayList<Drawable> arrayList) {
-            for (int i = 0; i < arrayList.size(); i++) {
-                mGallery.add(arrayList.get(i), i);
-            }
-            mMax = arrayList.size();
-        }
-
-        void cancel() {
-
+        protected void onProgressUpdate(Integer... i) {
+            mGallery.add(array.get(i[0]), i[0]);
         }
     }
 
     class WallpaperLoader extends AsyncTask<Integer, Void, Bitmap> {
+
         BitmapFactory.Options mOptions;
 
         WallpaperLoader() {
@@ -246,12 +265,10 @@ public class SlimWallpaper extends Activity {
 
         protected Bitmap doInBackground(Integer... params) {
             if (isCancelled()) return null;
-            try {
-                return BitmapFactory.decodeResource(getResources(),
-                        mImages.get(params[0]), mOptions);
-            } catch (OutOfMemoryError e) {
-                return null;
-            }
+            Bitmap b = BitmapFactory.decodeResource(getResources(), mImages.get(params[0]));
+            int[] size = getWallpaperSize();
+            Bitmap bi = ImageHelper.resize(getApplicationContext(), b, size[0], size[1]);
+            return bi;
         }
 
         @Override

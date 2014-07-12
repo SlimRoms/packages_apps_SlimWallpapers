@@ -1,3 +1,4 @@
+bin/*
 gen/*
 out/*
 .idea/*
@@ -7,3 +8,7 @@ SlimWallpaper.apk
 module_slimwallpaper.xml
 slimwallpaper.properties
 slimwallpaper.xml
+.project
+project.properties
+.classpath
+.settings/*

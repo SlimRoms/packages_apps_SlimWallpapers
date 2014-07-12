@@ -1,18 +1,18 @@
 /*
-* Copyright (C) 2013 SlimRoms Project
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright (C) 2013 SlimRoms Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.slim.wallpaper;
 
@@ -70,6 +70,32 @@ public class ImageHelper {
         paint.setColorFilter(f);
         c.drawBitmap(bmpOriginal, rect, rect, paint);
         return bmpGrayscale;
+    }
+
+    public static Bitmap resize(Context context, Bitmap bitmap, int width, int height) {
+        if (bitmap == null || context == null) {
+            return null;
+        }
+
+        Bitmap scaledBitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
+
+        float ratioX = width / (float) bitmap.getWidth();
+        float ratioY = height / (float) bitmap.getHeight();
+        float middleX = width / 2.0f;
+        float middleY = height / 2.0f;
+
+        final Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG);
+        paint.setAntiAlias(true);
+
+        Matrix scaleMatrix = new Matrix();
+        scaleMatrix.setScale(ratioX, ratioY, middleX, middleY);
+
+        Canvas canvas = new Canvas(scaledBitmap);
+        canvas.setMatrix(scaleMatrix);
+        canvas.drawBitmap(bitmap, middleX - bitmap.getWidth() / 2,
+                middleY - bitmap.getHeight() / 2, paint);
+
+        return scaledBitmap;
     }
 
     public static Drawable resize(Context context, Drawable image, int size) {
@@ -132,12 +158,12 @@ public class ImageHelper {
                 Config.ARGB_8888);
         Canvas canvas = new Canvas(output);
 
-        BitmapShader shader = new BitmapShader(bitmap,  TileMode.CLAMP, TileMode.CLAMP);
+        BitmapShader shader = new BitmapShader(bitmap, TileMode.CLAMP, TileMode.CLAMP);
         final Paint paint = new Paint();
         paint.setAntiAlias(true);
         paint.setShader(shader);
 
-        canvas.drawCircle(width/2, height/2, width/2, paint);
+        canvas.drawCircle(width / 2, height / 2, width / 2, paint);
 
         return output;
     }
