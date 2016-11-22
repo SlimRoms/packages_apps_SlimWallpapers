@@ -13,16 +13,15 @@
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string-array name="partner_wallpapers" translatable="false">
-        <item>slim_dark_fadingfire</item>
-        <item>slim_dark_fadingpurple</item>
-        <item>slim_dark_greenyellow</item>
-        <item>slim_light_blue</item>
-        <item>slim_light_brightyellow</item>
-        <item>slim_light_darkblue</item>
-        <item>slim_light_green</item>
-        <item>slim_light_red</item>
-        <item>slim_light_standard</item>
-        <item>slim_light_yellow</item>
-        <item>slim_material01</item>
+        <item>TipsyN-Beer</item>
+        <item>TipsyN-Beer-Garden</item>
+        <item>TipsyN-Disco</item>
+        <item>TipsyN-Hangover</item>
+        <item>TipsyN-Lights-Out</item>
+        <item>TipsyN-On-Ice</item>
+        <item>TipsyN-Pub-Bathroom-Tile</item>
+        <item>TipsyN-Pub-Carpet</item>
+        <item>TipsyN-Pub-Seat</item>
+        <item>TipsyN-Pub-Wall</item>
     </string-array>
 </resources>
