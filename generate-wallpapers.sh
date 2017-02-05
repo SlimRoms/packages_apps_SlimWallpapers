@@ -12,7 +12,7 @@ resolutions[xhdpi]=1440x1280
 resolutions[xxhdpi]=2160x1920
 resolutions[xxxhdpi]=2880x2560
 
-rm -rf res/drawable*
+rm -rf wallpaper-res/drawable*
 rm -rf res/values/wallpapers.xml
 
 for wallpaper in wallpapers/*; do
@@ -23,12 +23,12 @@ for wallpaper in wallpapers/*; do
     resolution="${resolutions[@]}"
     for n in "${!resolutions[@]}"; do
         resolution="${resolutions[$n]}"
-        if [ ! -d res/drawable-$n ]; then
-            mkdir -p res/drawable-$n
+        if [ ! -d wallpaper-res/drawable-$n ]; then
+            mkdir -p wallpaper-res/drawable-$n
         fi
-        convert $wallpaper -resize $resolution png24:res/drawable-$n/$wallpaper_name.png
+        convert $wallpaper -resize $resolution png24:wallpaper-res/drawable-$n/$wallpaper_name.png
     done
-    convert $wallpaper -resize 213x178 png24:res/drawable-nodpi/"$wallpaper_name"_small.png
+    convert $wallpaper -resize 213x178 png24:wallpaper-res/drawable-nodpi/"$wallpaper_name"_small.png
 done
 
 cat <<'EOF' >> res/values/wallpapers.xml
@@ -46,7 +46,7 @@ cat <<'EOF' >> res/values/wallpapers.xml
      limitations under the License.
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string-array name="partner_wallpapers" translatable="false">
+    <string-array name="wallpapers" translatable="false">
 EOF
 
 for wall in wallpapers/*; do
