@@ -12,7 +12,7 @@
      limitations under the License.
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string-array name="partner_wallpapers" translatable="false">
+    <string-array name="wallpapers" translatable="false">
         <item>slim_dark_fadingfire</item>
         <item>slim_dark_fadingpurple</item>
         <item>slim_dark_greenyellow</item>
