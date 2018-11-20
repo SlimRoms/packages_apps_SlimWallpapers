@@ -13,16 +13,9 @@
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string-array name="partner_wallpapers" translatable="false">
-        <item>slim_dark_fadingfire</item>
-        <item>slim_dark_fadingpurple</item>
-        <item>slim_dark_greenyellow</item>
-        <item>slim_light_blue</item>
-        <item>slim_light_brightyellow</item>
-        <item>slim_light_darkblue</item>
-        <item>slim_light_green</item>
-        <item>slim_light_red</item>
-        <item>slim_light_standard</item>
-        <item>slim_light_yellow</item>
-        <item>slim_material01</item>
+        <item>h4k3r_wallpaper1</item>
+        <item>h4k3r_wallpaper2</item>
+        <item>h4k3r_wallpaper3</item>
+        <item>h4k3r_wallpaper4</item>
     </string-array>
 </resources>
